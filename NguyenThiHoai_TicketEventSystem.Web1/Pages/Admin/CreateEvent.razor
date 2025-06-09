@@ -1,0 +1,17 @@
+﻿@page "/event/create"
+@attribute [Authorize(Roles = "Admin")]
+@inject CreateEventUseCase CreateEventUseCase
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+<h3>Tạo sự kiện mới</h3>
+<EventForm EventModel="@newEvent" ButtonText="Tạo Mới" OnValidSubmit="HandleCreateEvent" />
+@code {
+    private Event newEvent = new() { Date = DateTime.Now.Date.AddDays(7).AddHours(19) };
+    private async Task HandleCreateEvent()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        newEvent.CreatedById = authState.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await CreateEventUseCase.ExecuteAsync(newEvent);
+        NavigationManager.NavigateTo("/events");
+    }
+}

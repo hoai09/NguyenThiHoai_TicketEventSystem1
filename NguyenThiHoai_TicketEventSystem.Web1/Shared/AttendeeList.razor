@@ -1,0 +1,30 @@
+﻿@inject GetRegistrationsForEventUseCase GetRegistrationsForEventUseCase
+<div class="card mt-4">
+    <div class="card-header"><h4>Danh sách người tham dự</h4></div>
+    @if (registrations == null)
+    {
+        <div class="card-body"><p><em>Đang tải...</em></p></div>
+        ;
+    }
+    else if (!registrations.Any())
+    {
+        <div class="card-body"><p>Chưa có ai đăng ký.</p></div>
+        ;
+    }
+    else
+    {
+        <ul class="list-group list-group-flush">
+            @foreach (var reg in registrations)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    @reg.User?.Email <span class="badge bg-secondary rounded-pill">@reg.RegistrationDate.ToString("dd/MM/yyyy HH:mm")</span>
+                </li>
+            }
+        </ul>
+    }
+</div>
+@code {
+    [Parameter, EditorRequired] public int EventId { get; set; }
+    private List<Registration>? registrations;
+    protected override async Task OnParametersSetAsync() => registrations = await GetRegistrationsForEventUseCase.ExecuteAsync(EventId);
+}

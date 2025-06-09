@@ -1,0 +1,67 @@
+﻿@page "/events"
+@inject GetAllEventsUseCase GetAllEventsUseCase
+@inject DeleteEventUseCase DeleteEventUseCase
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+<PageTitle>Danh sách sự kiện</PageTitle>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Danh sách sự kiện</h3>
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <button class="btn btn-primary" @onclick="GoToCreateEvent">Tạo sự kiện mới</button>
+        </Authorized>
+    </AuthorizeView>
+</div>
+@if (events == null)
+{
+     <p><em>Đang tải...</em></p>
+    ;
+}
+else if (!events.Any())
+{
+     <p>Chưa có sự kiện nào được tạo.</p>
+    ;
+}
+else
+{
+    <table class="table table-striped table-hover">
+        <thead class="table-dark"><tr><th>Tên sự kiện</th><th>Ngày diễn ra</th><th>Địa điểm</th><th>Vé đã ĐK / Giới hạn</th><th style="width: 200px;">Hành động</th></tr></thead>
+        <tbody>
+            @foreach (var ev in events)
+            {
+                <tr style="cursor:pointer;" @onclick="() => GoToEventDetail(ev.Id)">
+                    <td>@ev.Name</td>
+                    <td>@ev.Date.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@ev.Location</td>
+                    <td>@ev.Registrations.Count() / @ev.TicketLimit</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" @onclick="() => GoToEventDetail(ev.Id)" @onclick:stopPropagation="true">Chi tiết</button>
+                        <AuthorizeView Roles="Admin">
+                            <Authorized>
+                                <button class="btn btn-sm btn-warning" @onclick="() => GoToEditEvent(ev.Id)" @onclick:stopPropagation="true">Sửa</button>
+                                <button class="btn btn-sm btn-danger" @onclick="async () => await ConfirmDelete(ev.Id)" @onclick:stopPropagation="true">Xóa</button>
+                            </Authorized>
+                        </AuthorizeView>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    private List<Event>? events;
+    protected override async Task OnInitializedAsync() => await LoadEvents();
+    private async Task LoadEvents() => events = await GetAllEventsUseCase.ExecuteAsync();
+    private void GoToCreateEvent() => NavigationManager.NavigateTo("/event/create");
+    private void GoToEventDetail(int eventId) => NavigationManager.NavigateTo($"/events/{eventId}");
+    private void GoToEditEvent(int eventId) => NavigationManager.NavigateTo($"/event/edit/{eventId}");
+    private async Task ConfirmDelete(int eventId)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc muốn xóa sự kiện này?"))
+        {
+            await DeleteEventUseCase.ExecuteAsync(eventId);
+            await JSRuntime.InvokeVoidAsync("alert", "Xóa sự kiện thành công!");
+            await LoadEvents();
+        }
+    }
+}

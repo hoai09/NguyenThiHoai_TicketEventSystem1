@@ -1,0 +1,44 @@
+﻿@using NguyenThiHoai_TicketEventSystem.UseCases.Interfaces
+@inject RegisterForEventUseCase RegisterForEventUseCase
+@inject UnregisterFromEventUseCase UnregisterFromEventUseCase
+@inject IRegistrationRepository RegistrationRepository
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@if (isRegistered)
+{
+     <button class="btn btn-danger" @onclick="Unregister">Hủy đăng ký</button>
+    ;
+}
+else
+{
+     <button class="btn btn-success" @onclick="Register">Đăng ký tham gia</button>
+    ;
+}
+@code {
+    [Parameter, EditorRequired] public int EventId { get; set; }
+    [Parameter] public EventCallback OnRegistrationComplete { get; set; }
+    private bool isRegistered; private string? currentUserId;
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            isRegistered = await RegistrationRepository.IsUserRegisteredAsync(EventId, currentUserId);
+        }
+    }
+    private async Task Register()
+    {
+        if (string.IsNullOrEmpty(currentUserId)) return;
+        var result = await RegisterForEventUseCase.ExecuteAsync(EventId, currentUserId);
+        await JSRuntime.InvokeVoidAsync("alert", result.Message);
+        if (result.Success) { isRegistered = true; await OnRegistrationComplete.InvokeAsync(); }
+    }
+    private async Task Unregister()
+    {
+        if (string.IsNullOrEmpty(currentUserId)) return;
+        await UnregisterFromEventUseCase.ExecuteAsync(EventId, currentUserId);
+        await JSRuntime.InvokeVoidAsync("alert", "Hủy đăng ký thành công!");
+        isRegistered = false; await OnRegistrationComplete.InvokeAsync();
+    }
+}

@@ -1,0 +1,29 @@
+﻿@page "/event/edit/{EventId:int}"
+@attribute [Authorize(Roles = "Admin")]
+@inject GetEventByIdUseCase GetEventByIdUseCase
+@inject UpdateEventUseCase UpdateEventUseCase
+@inject NavigationManager NavigationManager
+<h3>Chỉnh sửa sự kiện</h3>
+@if (eventToEdit != null)
+{
+     <EventForm EventModel="@eventToEdit" ButtonText="Cập Nhật" OnValidSubmit="HandleUpdateEvent" />
+    ;
+}
+else
+{
+     <p><em>Đang tải...</em></p>
+    ;
+}
+@code {
+    [Parameter] public int EventId { get; set; }
+    private Event? eventToEdit;
+    protected override async Task OnParametersSetAsync() => eventToEdit = await GetEventByIdUseCase.ExecuteAsync(EventId);
+    private async Task HandleUpdateEvent()
+    {
+        if (eventToEdit != null)
+        {
+            await UpdateEventUseCase.ExecuteAsync(eventToEdit);
+            NavigationManager.NavigateTo($"/events/{EventId}");
+        }
+    }
+}

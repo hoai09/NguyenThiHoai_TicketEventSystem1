@@ -1,0 +1,22 @@
+﻿@inject NavigationManager NavigationManager
+<EditForm Model="@EventModel" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3"><label class="form-label">Tên sự kiện</label><InputText class="form-control" @bind-Value="EventModel.Name" /><ValidationMessage For="() => EventModel.Name" /></div>
+            <div class="mb-3"><label class="form-label">Ngày diễn ra</label><InputDate class="form-control" @bind-Value="EventModel.Date" /><ValidationMessage For="() => EventModel.Date" /></div>
+            <div class="mb-3"><label class="form-label">Địa điểm</label><InputText class="form-control" @bind-Value="EventModel.Location" /><ValidationMessage For="() => EventModel.Location" /></div>
+            <div class="mb-3"><label class="form-label">Giới hạn vé</label><InputNumber class="form-control" @bind-Value="EventModel.TicketLimit" /><ValidationMessage For="() => EventModel.TicketLimit" /></div>
+            <div class="mb-3"><label class="form-label">Mô tả</label><InputTextArea class="form-control" @bind-Value="EventModel.Description" rows="5" /><ValidationMessage For="() => EventModel.Description" /></div>
+        </div><div class="card-footer">
+            <button type="submit" class="btn btn-success">@ButtonText</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Hủy</button>
+        </div>
+    </div>
+</EditForm>
+@code {
+    [Parameter, EditorRequired] public Event EventModel { get; set; } = new();
+    [Parameter, EditorRequired] public string ButtonText { get; set; } = "Lưu";
+    [Parameter, EditorRequired] public EventCallback OnValidSubmit { get; set; }
+    private void Cancel() => NavigationManager.NavigateTo("/events");
+}
